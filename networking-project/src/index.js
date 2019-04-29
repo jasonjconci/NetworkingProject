@@ -8,7 +8,7 @@ import $ from "jquery";
 
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
-import Router from './Router.js';
+import Router from "./Router.js";
 
 class Graph extends React.Component {
     render() {
@@ -65,8 +65,6 @@ class Main extends React.Component {
             }
         };
 
-
-
         // initialize your network!
         var visNetwork = new vis.Network(container, data, options);
         this.setState(() => {
@@ -83,7 +81,8 @@ class Main extends React.Component {
         } else if (nodes.length > 1) {
             alert("Please Selected 1 node only");
         } else {
-            $("#StartingNodeSpan").prop("innerHTML", nodes[0]);
+            this.state.startNode = nodes[0];
+            $("#StartingNodeSpan").prop("innerHTML", this.state.startNode);
         }
         return null;
     }
@@ -95,7 +94,8 @@ class Main extends React.Component {
         } else if (nodes.length > 1) {
             alert("Please Selected 1 node only");
         } else {
-            $("#EndingNodeSpan").prop("innerHTML", nodes[0]);
+            this.state.endNode = nodes[0];
+            $("#EndingNodeSpan").prop("innerHTML", this.state.endNode);
         }
         return null;
     }
@@ -103,8 +103,10 @@ class Main extends React.Component {
         super();
         this.setStartNode = this.setStartNode.bind(this);
         this.setEndNode = this.setEndNode.bind(this);
-        this.state = { 
+        this.state = {
             network: null,
+            startNode: null,
+            endNode: null,
             nodes: [
                 { id: 0, label: "A" },
                 { id: 1, label: "B" },
@@ -130,7 +132,7 @@ class Main extends React.Component {
                 { from: 5, to: 7, label: "4" },
                 { from: 6, to: 8, label: "2" }
             ]
-         };
+        };
     }
     render() {
         console.log(this.state.network);
