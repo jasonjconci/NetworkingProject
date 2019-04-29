@@ -33,35 +33,10 @@ class SetEndButton extends React.Component {
 
 class Main extends React.Component {
     componentDidMount() {
-        var nodes = new vis.DataSet([
-            { id: 0, label: "A" },
-            { id: 1, label: "B" },
-            { id: 2, label: "C" },
-            { id: 3, label: "D" },
-            { id: 4, label: "E" },
-            { id: 5, label: "F" },
-            { id: 6, label: "G" },
-            { id: 7, label: "H" },
-            { id: 8, label: "I" }
-        ]);
-
-        var edgesRaw = [
-            { from: 0, to: 2, label: "5" },
-            { from: 0, to: 3, label: "2" },
-            { from: 1, to: 2, label: "6" },
-            { from: 1, to: 4, label: "2" },
-            { from: 1, to: 5, label: "1" },
-            { from: 2, to: 4, label: "1" },
-            { from: 3, to: 4, label: "4" },
-            { from: 3, to: 6, label: "7" },
-            { from: 4, to: 6, label: "3" },
-            { from: 4, to: 7, label: "3" },
-            { from: 5, to: 7, label: "4" },
-            { from: 6, to: 8, label: "2" }
-        ];
+        var nodes = new vis.DataSet(this.state.nodes);
 
         // create an array with edges
-        var edges = new vis.DataSet(edgesRaw);
+        var edges = new vis.DataSet(this.state.edges);
 
         // create a network
         var container = document.getElementById("mynetwork");
@@ -141,7 +116,7 @@ class Main extends React.Component {
                 { id: 7, label: "H" },
                 { id: 8, label: "I" }
             ],
-            edgesRaw: [
+            edges: [
                 { from: 0, to: 2, label: "5" },
                 { from: 0, to: 3, label: "2" },
                 { from: 1, to: 2, label: "6" },
