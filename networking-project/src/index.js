@@ -45,18 +45,18 @@ class Main extends React.Component {
         ]);
 
         var edgesRaw = [
-            { from: 1, to: 3, label: "5" },
+            { from: 0, to: 2, label: "5" },
+            { from: 0, to: 3, label: "2" },
+            { from: 1, to: 2, label: "6" },
             { from: 1, to: 4, label: "2" },
-            { from: 2, to: 3, label: "6" },
-            { from: 2, to: 5, label: "2" },
-            { from: 2, to: 6, label: "1" },
-            { from: 3, to: 5, label: "1" },
-            { from: 4, to: 5, label: "4" },
-            { from: 4, to: 7, label: "7" },
-            { from: 5, to: 7, label: "3" },
-            { from: 5, to: 8, label: "3" },
-            { from: 6, to: 8, label: "4" },
-            { from: 7, to: 9, label: "2" }
+            { from: 1, to: 5, label: "1" },
+            { from: 2, to: 4, label: "1" },
+            { from: 3, to: 4, label: "4" },
+            { from: 3, to: 6, label: "7" },
+            { from: 4, to: 6, label: "3" },
+            { from: 4, to: 7, label: "3" },
+            { from: 5, to: 8, label: "4" },
+            { from: 6, to: 8, label: "2" }
         ];
 
         // create an array with edges
