@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { Model } from "react-axiom";
 import { Button, Spinner } from "react-bootstrap";
 import "./index.css";
 import vis from "vis";
@@ -9,6 +10,33 @@ import $ from "jquery";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import Router from "./Router.js";
+
+class RouterGroup extends Model {
+    static defaultState() {
+        return {
+            routers: {}
+        };
+    }
+
+    setup() {
+        var routerList = [];
+        for (var i = 0; i < 10; i++) {
+            var r = new RouterObject({
+                id: i
+            });
+            routerList.push(r);
+        }
+        this.setRouters(routerList);
+    }
+}
+
+class RouterObject extends Model {
+    static defaultState() {
+        return {
+            id: 0
+        };
+    }
+}
 
 class Graph extends React.Component {
     render() {
@@ -231,6 +259,8 @@ class Main extends React.Component {
     render() {
         console.log(this.state.network);
         var network = this.state.network;
+        const routerGroup = new RouterGroup();
+        routerGroup.setup();
         if (network) {
             return (
                 <div className="wrapper">
@@ -246,6 +276,7 @@ class Main extends React.Component {
                             <h4>Ending Node: </h4>
                             <span id="EndingNodeSpan">None</span>
                         </div>
+                        <span>{routerGroup.getRouters()[3].getId()}</span>
                     </div>
                 </div>
             );
