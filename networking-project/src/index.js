@@ -44,8 +44,7 @@ class Main extends React.Component {
             { id: 9, label: "I" }
         ]);
 
-        // create an array with edges
-        var edges = new vis.DataSet([
+        var edgesRaw = [
             { from: 1, to: 3, label: "5" },
             { from: 1, to: 4, label: "2" },
             { from: 2, to: 3, label: "6" },
@@ -58,7 +57,10 @@ class Main extends React.Component {
             { from: 5, to: 8, label: "3" },
             { from: 6, to: 8, label: "4" },
             { from: 7, to: 9, label: "2" }
-        ]);
+        ];
+
+        // create an array with edges
+        var edges = new vis.DataSet(edgesRaw);
 
         // create a network
         var container = document.getElementById("mynetwork");
