@@ -99,6 +99,100 @@ class Main extends React.Component {
         }
         return null;
     }
+
+    hasBeenSelected(S, node){
+        for(var i in S){
+            if(i[0] == node){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    dumbstra() {
+        S = [[this.state.startNode, null]];
+        All = [];
+        matrix = {};
+        for(var i = 0; i < this.state.nodes.length; i++){
+            if (i !== this.state.startNode){
+                All.push(i);
+                matrix[i] = [];
+            }
+        }
+
+        // Initializing matrix, such that all nodes are initialized with a node in S
+        // that they came from (ie, nodes which are connected with startNode)
+        for (var node in All){
+            for (var link in this.state.edges){
+                if (link.from == this.state.startNode && link.to == node){
+                    matrix[node].push(this.state.startNode);
+                } else if (link.rom == node && link.to == this.state.startNode){
+                    matrix[node].push(this.state.startNode);
+                }
+            }
+        }
+
+        // While we haven't hit all nodes,
+        while (All.length != 0){
+            // Select a random node whcih we haven't chosen yet
+            var chosen = All[Math.floor(Math.random()*All.length)];
+            while(hasBeenSelected(S, chosen) || matrix[chosen].length == 0){
+                chosen = All[Math.floor(Math.random()*All.length)];
+            }
+            // Select a random way we could've gotten to our selected node (necessary since we could have
+            // multiple routes to this node, and we need it to be random)
+            var predacessor = matrix[chosen][Math.floor(Math.random()*matrix[chosen].length)];
+            // Add the node-predacessor bit to S
+            S.push([chosen, predacessor]);
+            // Get the index of the chosen element and remove it from All
+            var indexOfChosen = All.indexOf(chosen);
+            if(indexOfChosen != -1){
+                All.splice(indexOfChosen, 1);
+            }
+            
+            // Recalculate what paths are valid after adding Chosen to S
+            // For each possible source node,
+            for(var node in S){
+                source = node[0];
+                // For each possible node in the network that can't be a source,
+                for (var dest in All){
+                    // Loop over all nodes in the network
+                    for (var link in this.state.edges){
+                        // And determine whether or not there are any new possible links we can use
+                        if (link.from == this.state.startNode && link.to == node && matrix[dest].indexOf(source) == -1){
+                            matrix[dest].push(source);
+                        } else if (link.rom == node && link.to == this.state.startNode && matrix[dest].indexOf(source) == -1){
+                            matrix[dest].push(source);
+                        }
+                    }
+                }
+            }
+        }
+
+        var route = []
+        // Loop over all selected nodes (when we're here, it should be all nodes)
+        for(var i in S){
+            // If we've hit our desired destination node,
+            if (i[0] == this.state.endNode){
+                var currNode = i;
+                // Loop until we hit our startNode
+                while(currNode[1] != null){
+                    // Push currNode, find the next node in the chain, repeat
+                    route.push(currNode);
+                    var index = 0;
+                    while(S[index][0] != currNode[1]){
+                        index++;
+                    }
+                    currNode = S[index];
+                }
+            }
+        }
+        
+    }
+
+
+
     constructor() {
         super();
         this.setStartNode = this.setStartNode.bind(this);
