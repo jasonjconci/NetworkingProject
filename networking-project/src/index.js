@@ -33,15 +33,15 @@ class SetEndButton extends React.Component {
 class Main extends React.Component {
     componentDidMount() {
         var nodes = new vis.DataSet([
-            { id: 1, label: "A" },
-            { id: 2, label: "B" },
-            { id: 3, label: "C" },
-            { id: 4, label: "D" },
-            { id: 5, label: "E" },
-            { id: 6, label: "F" },
-            { id: 7, label: "G" },
-            { id: 8, label: "H" },
-            { id: 9, label: "I" }
+            { id: 0, label: "A" },
+            { id: 1, label: "B" },
+            { id: 2, label: "C" },
+            { id: 3, label: "D" },
+            { id: 4, label: "E" },
+            { id: 5, label: "F" },
+            { id: 6, label: "G" },
+            { id: 7, label: "H" },
+            { id: 8, label: "I" }
         ]);
 
         var edgesRaw = [
