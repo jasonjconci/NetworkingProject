@@ -83,6 +83,11 @@ class Main extends React.Component {
             edges: edges
         };
         var options = {
+            edges: {
+                color : {
+                  inherit: false
+                }
+            },
             autoResize: true,
             height: "400px",
             width: "800px",
@@ -109,6 +114,54 @@ class Main extends React.Component {
         });
         this.forceUpdate();
     }
+
+
+    resetNetwork(){
+        var nodes = new vis.DataSet(this.state.nodes);
+
+        // create an array with edges
+        var edges = new vis.DataSet(this.state.edges);
+
+        // create a network
+        var container = document.getElementById("mynetwork");
+
+        // provide the data in the vis format
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            edges: {
+                color : {
+                  inherit: false
+                }
+            },
+            autoResize: true,
+            height: "400px",
+            width: "800px",
+            locale: "en",
+            clickToUse: false,
+            interaction: {
+                dragNodes: false,
+                dragView: false,
+
+                multiselect: false,
+                navigationButtons: false,
+                selectable: true,
+                selectConnectedEdges: false,
+                tooltipDelay: 300,
+                zoomView: false
+            }
+        };
+
+        // initialize your network!
+        var visNetwork = new vis.Network(container, data, options);
+        this.setState(() => {
+            console.log("loaded network");
+            return { network: visNetwork };
+        });
+    }
+
     setStartNode() {
         var network = this.state.network;
         var nodes = network.getSelectedNodes();
@@ -252,6 +305,38 @@ class Main extends React.Component {
             }
         }
         console.log(route);
+
+
+        /** NOTE: THIS SECTION DOESN'T REALLY WORK YET. STILL DEBUGGING */
+
+        var copyEdges = this.state.edges.slice(0);
+        var newEdges = []
+        // For each of our calculated routes,
+        for(var i = 0; i < route.length; i++){
+            var routeEdge = route[i];
+            for (var j = 0; j < copyEdges.length; j++){
+                var currEdge = copyEdges[j];
+                // If we get a match in one direction, add it with red color
+                if(currEdge.from == routeEdge[0] && currEdge.to == routeEdge[1]){
+                    newEdges.push({ from: currEdge.from, to: currEdge.to, label: currEdge.label, color:{color:'#ff383f'}});
+                } 
+                // If we get a match in the other direction, add it with red color
+                else if (currEdge.from == routeEdge[1] && currEdge.to == routeEdge[0]){
+                    newEdges.push({ from: currEdge.from, to: currEdge.to, label: currEdge.label, color:{color:'#ff383f'}});
+                } 
+                // Otherwise, leave the edge as it were
+                else {
+                    newEdges.push(currEdge);
+                }
+            }
+        }
+
+        this.setState({
+            edges: newEdges.slice(0)
+        });
+        console.log(copyEdges);
+        console.log(this.state.edges);
+        this.resetNetwork();
     }
 
     constructor() {
