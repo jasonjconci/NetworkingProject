@@ -139,6 +139,9 @@ class Main extends React.Component {
 
 
     dumbstra() {
+        if (this.state.startNode == null || this.state.endNode == null){
+            return;
+        }
         S = [[this.state.startNode, null]];
         All = [];
         matrix = {};
