@@ -69,8 +69,58 @@ class CalculateButton extends React.Component {
 
 class Main extends React.Component {
     componentDidMount() {
-        this.reset();
+        this.resetNetwork();
     }
+
+    resetNetwork() {
+        var nodes = new vis.DataSet(this.state.nodes);
+
+        // create an array with edges
+        var edges = new vis.DataSet(this.state.edges);
+
+        // create a network
+        var container = document.getElementById("mynetwork");
+
+        // provide the data in the vis format
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            edges: {
+                color: {
+                    inherit: false
+                }
+            },
+            autoResize: true,
+            height: "400px",
+            width: "800px",
+            locale: "en",
+            clickToUse: false,
+            interaction: {
+                dragNodes: false,
+                dragView: false,
+
+                multiselect: false,
+                navigationButtons: false,
+                selectable: true,
+                selectConnectedEdges: false,
+                tooltipDelay: 300,
+                zoomView: false
+            },
+            layout: {
+                randomSeed: 3
+            }
+        };
+
+        // initialize your network!
+        var visNetwork = new vis.Network(container, data, options);
+        this.setState(() => {
+            console.log("loaded network");
+            return { network: visNetwork };
+        });
+    }
+
     setStartNode() {
         var network = this.state.network;
         var nodes = network.getSelectedNodes();
@@ -81,13 +131,6 @@ class Main extends React.Component {
         } else {
             this.state.startNode = nodes[0];
             $("#StartingNodeSpan").prop("innerHTML", this.state.startNode);
-            var color = { color: "red" };
-            var edgesNew = this.state.edges;
-            edgesNew[4].color = color;
-            this.setState({
-                edges: edgesNew
-            });
-            this.reset();
         }
         return null;
     }
@@ -118,6 +161,8 @@ class Main extends React.Component {
         if (this.state.startNode == null || this.state.endNode == null) {
             return;
         }
+        console.log(this.state.startNode);
+        console.log(typeof this.state.startNode);
         var S = [[this.state.startNode, null]];
         var All = [];
         var matrix = {};
@@ -146,6 +191,7 @@ class Main extends React.Component {
         // While we haven't hit all nodes,
         while (All.length != 0) {
             // Select a random node whcih we haven't chosen yet
+            /** THIS WORKS I THINK */
             var chosen = All[Math.floor(Math.random() * All.length)];
             while (
                 this.hasBeenSelected(S, chosen) ||
@@ -172,17 +218,34 @@ class Main extends React.Component {
                 // Recalculate what paths are valid after adding Chosen to S
                 // For each possible source node,
                 for (var i = 0; i < S.length; i++) {
-                    var source = S[i][0];
+                    var source = parseInt(S[i][0], 10);
                     // For each possible node in the network that can't be a source,
                     for (var j = 0; j < All.length; j++) {
-                        var dest = All[j];
+                        var dest = parseInt(All[j], 10);
                         // Loop over all nodes in the network
                         for (var k = 0; k < this.state.edges.length; k++) {
                             // And determine whether or not there are any new possible links we can use
                             var link = this.state.edges[k];
-                            if (link.from == source && link.to == node) {
+                            console.log(source, dest, link.from, link.to);
+                            console.log(
+                                typeof source,
+                                typeof dest,
+                                typeof link.from,
+                                typeof link.to
+                            );
+                            if (
+                                parseInt(link.from, 10) == source &&
+                                parseInt(link.to, 10) == dest &&
+                                matrix[node].indexOf(source) == -1
+                            ) {
+                                console.log("GOT ONE");
                                 matrix[dest].push(source);
-                            } else if (link.from == node && link.to == source) {
+                            } else if (
+                                parseInt(link.from, 10) == dest &&
+                                parseInt(link.to, 10) == source &&
+                                matrix[node].indexOf(source) == -1
+                            ) {
+                                console.log("GOT ONE");
                                 matrix[dest].push(source);
                             }
                         }
@@ -192,12 +255,13 @@ class Main extends React.Component {
         }
 
         var route = [];
+        console.log(route);
         // Loop over all selected nodes (when we're here, it should be all nodes)
         for (var i = 0; i < S.length; i++) {
-            var node = S[i];
+            var testNode = S[i];
             // If we've hit our desired destination node,
-            if (node[0] == this.state.endNode) {
-                var currNode = i;
+            if (testNode[0] == this.state.endNode) {
+                var currNode = testNode;
                 // Loop until we hit our startNode
                 while (currNode[1] != null) {
                     // Push currNode, find the next node in the chain, repeat
@@ -211,6 +275,39 @@ class Main extends React.Component {
             }
         }
         console.log(route);
+
+        /** NOTE: THIS SECTION DOESN'T REALLY WORK YET. STILL DEBUGGING */
+
+        var copyEdges = this.state.edges;
+        var newEdges = [];
+        // For each of our calculated routes,
+        for (var i = 0; i < route.length; i++) {
+            var routeEdge = route[i];
+            for (var j = 0; j < copyEdges.length; j++) {
+                var currEdge = copyEdges[j];
+                // If we get a match in one direction, add it with red color
+                if (
+                    currEdge.from == routeEdge[0] &&
+                    currEdge.to == routeEdge[1]
+                ) {
+                    copyEdges[j].color = { color: "red" };
+                }
+                // If we get a match in the other direction, add it with red color
+                else if (
+                    currEdge.from == routeEdge[1] &&
+                    currEdge.to == routeEdge[0]
+                ) {
+                    copyEdges[j].color = { color: "red" };
+                }
+            }
+        }
+
+        this.setState({
+            edges: copyEdges
+        });
+        console.log(copyEdges);
+        console.log(this.state.edges);
+        this.resetNetwork();
     }
 
     constructor() {
@@ -248,47 +345,6 @@ class Main extends React.Component {
                 { from: 6, to: 8, label: "2", width: 3 }
             ]
         };
-    }
-    reset() {
-        var nodes = new vis.DataSet(this.state.nodes);
-
-        // create an array with edges
-        var edges = new vis.DataSet(this.state.edges);
-
-        // create a network
-        var container = document.getElementById("mynetwork");
-
-        // provide the data in the vis format
-        var data = {
-            nodes: nodes,
-            edges: edges
-        };
-        var options = {
-            autoResize: true,
-            height: "400px",
-            width: "800px",
-            locale: "en",
-            clickToUse: false,
-            interaction: {
-                dragNodes: false,
-                dragView: false,
-
-                multiselect: false,
-                navigationButtons: false,
-                selectable: true,
-                selectConnectedEdges: false,
-                tooltipDelay: 300,
-                zoomView: false
-            }
-        };
-
-        // initialize your network!
-        var visNetwork = new vis.Network(container, data, options);
-        this.setState(() => {
-            console.log("loaded network");
-            return { network: visNetwork };
-        });
-        this.forceUpdate();
     }
     render() {
         console.log(this.state.network);
