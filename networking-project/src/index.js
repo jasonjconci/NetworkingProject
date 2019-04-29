@@ -149,6 +149,8 @@ class Main extends React.Component {
         if (this.state.startNode == null || this.state.endNode == null) {
             return;
         }
+        console.log(this.state.startNode);
+        console.log(typeof(this.state.startNode));
         var S = [[this.state.startNode, null]];
         var All = [];
         var matrix = {};
@@ -177,6 +179,7 @@ class Main extends React.Component {
         // While we haven't hit all nodes,
         while (All.length != 0) {
             // Select a random node whcih we haven't chosen yet
+            /** THIS WORKS I THINK */
             var chosen = All[Math.floor(Math.random() * All.length)];
             while (
                 this.hasBeenSelected(S, chosen) ||
@@ -203,17 +206,23 @@ class Main extends React.Component {
                 // Recalculate what paths are valid after adding Chosen to S
                 // For each possible source node,
                 for (var i = 0; i < S.length; i++) {
-                    var source = S[i][0];
+                    var source = parseInt(S[i][0], 10);
                     // For each possible node in the network that can't be a source,
                     for (var j = 0; j < All.length; j++) {
-                        var dest = All[j];
+                        var dest = parseInt(All[j], 10)
                         // Loop over all nodes in the network
                         for (var k = 0; k < this.state.edges.length; k++) {
                             // And determine whether or not there are any new possible links we can use
                             var link = this.state.edges[k];
-                            if (link.from == source && link.to == node) {
+                            console.log(source, dest, link.from, link.to);
+                            console.log(typeof(source), typeof(dest), typeof(link.from), typeof(link.to));
+                            if (parseInt(link.from, 10) == source && parseInt(link.to, 10) == dest && matrix[node].indexOf(source) == -1) {
+                                console.log(
+                                    "GOT ONE"
+                                );
                                 matrix[dest].push(source);
-                            } else if (link.from == node && link.to == source) {
+                            } else if (parseInt(link.from, 10) == dest && parseInt(link.to, 10) == source && matrix[node].indexOf(source) == -1) {
+                                console.log("GOT ONE");
                                 matrix[dest].push(source);
                             }
                         }
@@ -223,12 +232,13 @@ class Main extends React.Component {
         }
 
         var route = [];
+        console.log(route);
         // Loop over all selected nodes (when we're here, it should be all nodes)
         for (var i = 0; i < S.length; i++) {
-            var node = S[i];
+            var testNode = S[i];
             // If we've hit our desired destination node,
-            if (node[0] == this.state.endNode) {
-                var currNode = i;
+            if (testNode[0] == this.state.endNode) {
+                var currNode = testNode;
                 // Loop until we hit our startNode
                 while (currNode[1] != null) {
                     // Push currNode, find the next node in the chain, repeat
