@@ -148,7 +148,6 @@ class Main extends React.Component {
                 matrix[i] = [];
             }
         }
-
         // Initializing matrix, such that all nodes are initialized with a node in S
         // that they came from (ie, nodes which are connected with startNode)
         for (var node in All){
@@ -160,7 +159,6 @@ class Main extends React.Component {
                 }
             }
         }
-
         // While we haven't hit all nodes,
         while (All.length != 0){
             // Select a random node whcih we haven't chosen yet
@@ -178,7 +176,6 @@ class Main extends React.Component {
             if(indexOfChosen != -1){
                 All.splice(indexOfChosen, 1);
             }
-            
             // Recalculate what paths are valid after adding Chosen to S
             // For each possible source node,
             for(var node in S){
@@ -197,7 +194,6 @@ class Main extends React.Component {
                 }
             }
         }
-
         var route = []
         // Loop over all selected nodes (when we're here, it should be all nodes)
         for(var i in S){
@@ -216,7 +212,7 @@ class Main extends React.Component {
                 }
             }
         }
-        
+        console.log(route);        
     }
 
 
