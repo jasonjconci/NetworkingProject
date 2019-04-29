@@ -69,45 +69,7 @@ class CalculateButton extends React.Component {
 
 class Main extends React.Component {
     componentDidMount() {
-        var nodes = new vis.DataSet(this.state.nodes);
-
-        // create an array with edges
-        var edges = new vis.DataSet(this.state.edges);
-
-        // create a network
-        var container = document.getElementById("mynetwork");
-
-        // provide the data in the vis format
-        var data = {
-            nodes: nodes,
-            edges: edges
-        };
-        var options = {
-            autoResize: true,
-            height: "400px",
-            width: "800px",
-            locale: "en",
-            clickToUse: false,
-            interaction: {
-                dragNodes: false,
-                dragView: false,
-
-                multiselect: false,
-                navigationButtons: false,
-                selectable: true,
-                selectConnectedEdges: false,
-                tooltipDelay: 300,
-                zoomView: false
-            }
-        };
-
-        // initialize your network!
-        var visNetwork = new vis.Network(container, data, options);
-        this.setState(() => {
-            console.log("loaded network");
-            return { network: visNetwork };
-        });
-        this.forceUpdate();
+        this.reset();
     }
     setStartNode() {
         var network = this.state.network;
@@ -119,6 +81,13 @@ class Main extends React.Component {
         } else {
             this.state.startNode = nodes[0];
             $("#StartingNodeSpan").prop("innerHTML", this.state.startNode);
+            var color = { color: "red" };
+            var edgesNew = this.state.edges;
+            edgesNew[4].color = color;
+            this.setState({
+                edges: edgesNew
+            });
+            this.reset();
         }
         return null;
     }
@@ -265,20 +234,61 @@ class Main extends React.Component {
                 { id: 8, label: "I" }
             ],
             edges: [
-                { from: 0, to: 2, label: "5" },
-                { from: 0, to: 3, label: "2" },
-                { from: 1, to: 2, label: "6" },
-                { from: 1, to: 4, label: "2" },
-                { from: 1, to: 5, label: "1" },
-                { from: 2, to: 4, label: "1" },
-                { from: 3, to: 4, label: "4" },
-                { from: 3, to: 6, label: "7" },
-                { from: 4, to: 6, label: "3" },
-                { from: 4, to: 7, label: "3" },
-                { from: 5, to: 7, label: "4" },
-                { from: 6, to: 8, label: "2" }
+                { from: 0, to: 2, label: "5", width: 3 },
+                { from: 0, to: 3, label: "2", width: 3 },
+                { from: 1, to: 2, label: "6", width: 3 },
+                { from: 1, to: 4, label: "2", width: 3 },
+                { from: 1, to: 5, label: "1", width: 3 },
+                { from: 2, to: 4, label: "1", width: 3 },
+                { from: 3, to: 4, label: "4", width: 3 },
+                { from: 3, to: 6, label: "7", width: 3 },
+                { from: 4, to: 6, label: "3", width: 3 },
+                { from: 4, to: 7, label: "3", width: 3 },
+                { from: 5, to: 7, label: "4", width: 3 },
+                { from: 6, to: 8, label: "2", width: 3 }
             ]
         };
+    }
+    reset() {
+        var nodes = new vis.DataSet(this.state.nodes);
+
+        // create an array with edges
+        var edges = new vis.DataSet(this.state.edges);
+
+        // create a network
+        var container = document.getElementById("mynetwork");
+
+        // provide the data in the vis format
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        var options = {
+            autoResize: true,
+            height: "400px",
+            width: "800px",
+            locale: "en",
+            clickToUse: false,
+            interaction: {
+                dragNodes: false,
+                dragView: false,
+
+                multiselect: false,
+                navigationButtons: false,
+                selectable: true,
+                selectConnectedEdges: false,
+                tooltipDelay: 300,
+                zoomView: false
+            }
+        };
+
+        // initialize your network!
+        var visNetwork = new vis.Network(container, data, options);
+        this.setState(() => {
+            console.log("loaded network");
+            return { network: visNetwork };
+        });
+        this.forceUpdate();
     }
     render() {
         console.log(this.state.network);
