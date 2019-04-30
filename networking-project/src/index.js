@@ -18,9 +18,11 @@ class Graph extends React.Component {
 }
 
 class DeleteEdgeButton extends React.Component {
-    render(){
-        return(
-            <Button onClick={this.props.onClickFunction}>Delete Selected Edge</Button>
+    render() {
+        return (
+            <Button onClick={this.props.onClickFunction}>
+                Delete Selected Edge
+            </Button>
         );
     }
 }
@@ -52,7 +54,6 @@ class EditEdgeWeight extends React.Component {
         );
     }
 }
-
 
 class CalculateButton extends React.Component {
     render() {
@@ -153,7 +154,7 @@ class Main extends React.Component {
         }
         return null;
     }
-    removeEdge(){
+    removeEdge() {
         var network = this.state.network;
         var edges = network.getSelectedEdges();
         if (edges[0] == undefined) {
@@ -165,8 +166,8 @@ class Main extends React.Component {
             console.log(edges[0].from, edges[0].to);
             var newEdges = this.state.edges;
             var index = 0;
-            for (var i = 0; i < newEdges.length; i++){
-                if (this.state.edges[i].id == edges[0]){
+            for (var i = 0; i < newEdges.length; i++) {
+                if (this.state.edges[i].id == edges[0]) {
                     newEdges.splice(i, 1);
                 }
             }
@@ -320,10 +321,14 @@ class Main extends React.Component {
         }
         console.log(route);
 
+        var edges = this.state.edges;
+
+        var list = [];
+
         /** NOTE: THIS SECTION DOESN'T REALLY WORK YET. STILL DEBUGGING */
 
         var copyEdges = this.state.edges;
-        for(var k = 0; k < copyEdges.length; k++){
+        for (var k = 0; k < copyEdges.length; k++) {
             copyEdges[k].color = { color: "blue" };
         }
         // For each of our calculated routes,
@@ -337,6 +342,11 @@ class Main extends React.Component {
                     currEdge.to == routeEdge[1]
                 ) {
                     copyEdges[j].color = { color: "red" };
+                    list.push({
+                        edge: currEdge.id,
+                        trafficSize: 7,
+                        isBackward: true
+                    });
                 }
                 // If we get a match in the other direction, add it with red color
                 else if (
@@ -344,6 +354,11 @@ class Main extends React.Component {
                     currEdge.to == routeEdge[0]
                 ) {
                     copyEdges[j].color = { color: "red" };
+                    list.push({
+                        edge: currEdge.id,
+                        trafficSize: 7,
+                        isBackward: false
+                    });
                 }
             }
         }
@@ -353,7 +368,23 @@ class Main extends React.Component {
         });
         console.log(copyEdges);
         console.log(this.state.edges);
-        this.resetNetwork();
+
+        var self = this;
+        const frameLength = 1000;
+
+        console.log(list);
+        list = list.reverse();
+        if (list.length !== 0) {
+            for (let i = 0; i < list.length; i++) {
+                setTimeout(() => {
+                    console.log("Frame: ", i);
+                    self.state.network.animateTraffic(list[i]);
+                }, frameLength * i);
+            }
+            setTimeout(() => {
+                self.resetNetwork();
+            }, frameLength * list.length);
+        }
     }
 
     constructor() {
@@ -402,13 +433,24 @@ class Main extends React.Component {
                 <div className="wrapper">
                     <Graph />
                     <div>
-                        <SetStartButton onClickFunction={this.setStartNode} />
-                        <SetEndButton onClickFunction={this.setEndNode} />
-                        <CalculateButton onClickFunction={this.dumbstra} />
+                        <SetStartButton
+                            className="SetStartButton"
+                            onClickFunction={this.setStartNode}
+                        />
+                        <SetEndButton
+                            className="SetEndButton"
+                            onClickFunction={this.setEndNode}
+                        />
+                        <CalculateButton
+                            className="CalculateButton"
+                            onClickFunction={this.dumbstra}
+                        />
                     </div>
+                    <div className="row">&nbsp;</div>
                     <div>
                         <EditEdgeWeight onClickFunction={this.editEdgeWeight} />
                     </div>
+                    <div className="row">&nbsp;</div>
                     <DeleteEdgeButton onClickFunction={this.removeEdge} />
                     <div id="StartEndingNode">
                         <div id="StartNode">
@@ -440,3 +482,317 @@ ReactDOM.render(<Main />, document.getElementById("root"));
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
 serviceWorker.unregister();
+
+// Author: Edvin Eshagh
+//
+// Date: 6/22/2015
+//
+// Purpose:  animate traffic from one node to another.
+//
+
+vis.Network.prototype.animateTraffic = function(
+    edgesTrafficList,
+    onPreAnimationHandler,
+    onPreAnimateFrameHandler,
+    onPostAnimateFrameHandler,
+    onPostAnimationHandler
+) {
+    var thisAnimator = this;
+
+    var trafficAnimator = {
+        thisNetwork: this,
+
+        trafficCanvas: null,
+        trafficCanvasCtx: null,
+        trafficCanvasWidth: null,
+        trafficCanvasHeight: null,
+
+        reportedErrors: {}, // Helps to avoid reporting the same error in multiple setTimeout events
+
+        edgesTrafficList: edgesTrafficList,
+
+        onPreAnimateFrame: onPreAnimateFrameHandler,
+        ontPostAnimateFrame: onPostAnimateFrameHandler,
+        onPreAnimation: onPreAnimationHandler,
+        onPostAnimation: onPostAnimationHandler,
+
+        //////////////////////////////////////////////////////////////
+        //
+        // return object {edge, trafficSize, isBackward}
+        parseEdgeTraffic: function(edgeTraffic) {
+            var edge;
+            if (edgeTraffic.edge) {
+                edge = edgeTraffic.edge.edgeType
+                    ? edgeTraffic.edge
+                    : this.thisNetwork.body.edges[edgeTraffic.edge.id] ||
+                      this.thisNetwork.body.edges[edgeTraffic.edge];
+            } else {
+                edge = this.thisNetwork.body.edges[edgeTraffic];
+            }
+
+            return {
+                edge: edge,
+                trafficSize: edgeTraffic.trafficSize || 1,
+                isBackward: edge && edgeTraffic.isBackward
+            };
+        },
+
+        //////////////////////////////////////////////////////////////
+        //
+        clearAnimationCanvas: function() {
+            this.trafficCanvasCtx.save();
+            this.trafficCanvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+            this.trafficCanvasCtx.clearRect(
+                0,
+                0,
+                this.trafficCanvasWidth,
+                this.trafficCanvasHeight
+            );
+            this.trafficCanvasCtx.restore();
+        },
+
+        //////////////////////////////////////////////////////////////
+        //
+        getNetworkTrafficCanvas: function() {
+            this.trafficCanvas = this.thisNetwork.body.container.getElementsByClassName(
+                "networkTrafficCanvas"
+            )[0];
+
+            if (this.trafficCanvas == undefined) {
+                var frame = this.thisNetwork.canvas.frame;
+                this.trafficCanvas = document.createElement("canvas");
+                this.trafficCanvas.className = "networkTrafficCanvas";
+                this.trafficCanvas.style.position = "absolute";
+                this.trafficCanvas.style.top = this.trafficCanvas.style.left = 0;
+                this.trafficCanvas.style.zIndex = 1;
+                this.trafficCanvas.style.pointerEvents = "none";
+                this.trafficCanvas.style.width = frame.style.width;
+                this.trafficCanvas.style.height = frame.style.height;
+
+                this.trafficCanvas.width = frame.canvas.clientWidth;
+                this.trafficCanvas.height = frame.canvas.clientHeight;
+
+                frame.appendChild(this.trafficCanvas);
+            }
+
+            return this.trafficCanvas;
+        },
+
+        //////////////////////////////////////////////////////////////
+        //
+        animateFrame: function(offset, frameCounter) {
+            this.clearAnimationCanvas();
+
+            var maxOffset = 0.9;
+
+            var reportedError = {};
+
+            if (offset > maxOffset) {
+                if (this.onPostAnimation)
+                    this.onPostAnimation(this.edgesTrafficList);
+                return;
+            }
+            for (var i in this.edgesTrafficList) {
+                var edgeTraffic = this.parseEdgeTraffic(
+                    this.edgesTrafficList[i]
+                );
+
+                if (!edgeTraffic.edge) {
+                    if (!this.reportedErrors[this.edgesTrafficList[i]]) {
+                        console.error(
+                            "No edge path defined: ",
+                            this.edgesTrafficList[i]
+                        );
+                        this.reportedErrors[this.edgesTrafficList[i]] = true;
+                    }
+                    continue;
+                }
+
+                if (
+                    this.onPreAnimateFrameHandler &&
+                    this.onPreAnimateFrameHandler(edgeTraffic, frameCounter) ===
+                        false
+                ) {
+                    continue;
+                }
+
+                //              var s = edgeTraffic.edge.body.view.scale;
+                //              var t = edgeTraffic.edge.body.view.translation;
+                var p = edgeTraffic.edge.edgeType.getPoint(
+                    edgeTraffic.isBackward ? maxOffset - offset : offset
+                );
+
+                //              this.trafficCanvasCtx.beginPath();
+                //                  this.trafficCanvasCtx.arc(p.x, p.y, parseInt(edgeTraffic.trafficSize)+1 || 2, 0, Math.PI*2, false);
+                //                  this.trafficCanvasCtx.lineWidth=1;
+                //                  this.trafficCanvasCtx.strokeStyle="#000";
+                //                  this.trafficCanvasCtx.fillStyle = "red";
+                //                  this.trafficCanvasCtx.fill();
+                //                  this.trafficCanvasCtx.stroke();
+                //              this.trafficCanvasCtx.closePath();
+
+                this.trafficCanvasCtx.beginPath();
+                this.trafficCanvasCtx.arc(
+                    p.x,
+                    p.y,
+                    parseInt(edgeTraffic.trafficSize) || 1,
+                    0,
+                    Math.PI * 2,
+                    false
+                );
+                this.trafficCanvasCtx.lineWidth = 1;
+                this.trafficCanvasCtx.strokeWidth = 4;
+                this.trafficCanvasCtx.strokeStyle = "rgba(57,138,255,0.1)";
+                this.trafficCanvasCtx.fillStyle = "#1262e3";
+                this.trafficCanvasCtx.fill();
+                this.trafficCanvasCtx.stroke();
+                this.trafficCanvasCtx.closePath();
+
+                if (
+                    this.onPostAnimateFrame &&
+                    this.onPostAnimateFrame(edgeTraffic, frameCounter) === false
+                ) {
+                    if (this.onPostAnimation)
+                        this.onPostAnimation(this.edgesTrafficList);
+                    return;
+                }
+            }
+
+            setTimeout(
+                this.animateFrame.bind(this),
+                10,
+                offset + 0.01,
+                frameCounter++
+            );
+        },
+
+        //////////////////////////////////////////////////////////////
+        //
+        initalizeCanvasForEdgeAnimation: function() {
+            this.reportedErrors = {};
+
+            if (
+                Object.prototype.toString.call(this.edgesTrafficList) !==
+                "[object Array]"
+            ) {
+                this.edgesTrafficList = [this.edgesTrafficList];
+            }
+
+            this.trafficCanvas = this.getNetworkTrafficCanvas();
+
+            this.trafficCanvasCtx = this.trafficCanvas.getContext("2d");
+            this.trafficCanvasWidth = this.trafficCanvasCtx.canvas.width;
+            this.trafficCanvasHeight = this.trafficCanvasCtx.canvas.height;
+
+            var edgeTraffic = this.parseEdgeTraffic(this.edgesTrafficList[0]);
+
+            var s = this.thisNetwork.getScale(); // edgeTraffic.edge.body.view.scale;
+            var t = this.thisNetwork.body.view.translation; //edgeTraffic.edge.body.view.translation;
+
+            this.trafficCanvasCtx.setTransform(1, 0, 0, 1, 0, 0);
+            this.trafficCanvasCtx.translate(t.x, t.y);
+            this.trafficCanvasCtx.scale(s, s);
+            /*
+			if (!this.onPreAnimation)
+            this.onPreAnimation = function(edgesTrafficList) {
+                // remove the value from the source traffic
+                for (var i in edgesTrafficList) {
+                    edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
+                    if (!edgeTraffic.edge) {
+                        continue;
+                    }
+                    var fromValue = edgeTraffic.edge.from.getValue()
+                    if (parseFloat(fromValue)) {
+                    
+                        var newValue = fromValue +
+                            (edgeTraffic.isBackward ? -1 : 1) * -edgeTraffic.trafficSize;
+                    
+                        this.thisNetwork.body.data.nodes
+                            .update({id:edgeTraffic.edge.fromId, value:Math.max(0, newValue)});
+                    }
+                }
+            };
+
+            //////////////////////////////////////////////////////////////
+            // 
+			if (!this.onPostAnimation)
+            this.onPostAnimation = function(edgesTrafficList) {
+                // add the value from the source traffic to target
+                for (var i in edgesTrafficList) {
+                    edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
+                    if (!edgeTraffic.edge) {
+                        continue;
+                    }
+                    var toValue = edgeTraffic.edge.to.getValue()
+                    if (parseFloat(toValue)) {
+
+                    var newValue = (toValue || 0) 
+                        + (edgeTraffic.isBackward ? -1 : 1) * edgeTraffic.trafficSize;
+                        
+                    
+                        this.thisNetwork.body.data.nodes
+                            .update({id:edgeTraffic.edge.toId, value: newValue});
+                    }
+                }
+            };
+            */
+        }
+    };
+
+    trafficAnimator.initalizeCanvasForEdgeAnimation();
+
+    if (
+        trafficAnimator.onPreAnimation &&
+        trafficAnimator.onPreAnimation(trafficAnimator.edgesTrafficList) ===
+            false
+    )
+        return;
+
+    trafficAnimator.animateFrame(0.1 /*animationStartOffset*/, 0 /*frame*/);
+};
+
+vis.Network.prototype.animateTrafficOnPostAnimation = function(
+    edgesTrafficList
+) {
+    // add the value from the source traffic to target
+    for (var i in edgesTrafficList) {
+        edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
+        if (!edgeTraffic.edge) {
+            continue;
+        }
+        var toValue = edgeTraffic.edge.to.getValue();
+        if (parseFloat(toValue)) {
+            var newValue =
+                (toValue || 0) +
+                (edgeTraffic.isBackward ? -1 : 1) * edgeTraffic.trafficSize;
+
+            this.thisNetwork.body.data.nodes.update({
+                id: edgeTraffic.edge.toId,
+                value: newValue
+            });
+        }
+    }
+};
+
+vis.Network.prototype.animateTrafficOnPreAnimation = function(
+    edgesTrafficList
+) {
+    // remove the value from the source traffic
+    for (var i in edgesTrafficList) {
+        edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
+        if (!edgeTraffic.edge) {
+            continue;
+        }
+        var fromValue = edgeTraffic.edge.from.getValue();
+        if (parseFloat(fromValue)) {
+            var newValue =
+                fromValue +
+                (edgeTraffic.isBackward ? -1 : 1) * -edgeTraffic.trafficSize;
+            S;
+            this.thisNetwork.body.data.nodes.update({
+                id: edgeTraffic.edge.fromId,
+                value: Math.max(0, newValue)
+            });
+        }
+    }
+};
