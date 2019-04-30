@@ -17,6 +17,14 @@ class Graph extends React.Component {
     }
 }
 
+class DeleteEdgeButton extends React.Component {
+    render(){
+        return(
+            <Button onClick={this.props.onClickFunction}>Delete Selected Edge</Button>
+        );
+    }
+}
+
 class SetStartButton extends React.Component {
     render() {
         return (
@@ -44,6 +52,7 @@ class EditEdgeWeight extends React.Component {
         );
     }
 }
+
 
 class CalculateButton extends React.Component {
     render() {
@@ -144,6 +153,31 @@ class Main extends React.Component {
         }
         return null;
     }
+    removeEdge(){
+        var network = this.state.network;
+        var edges = network.getSelectedEdges();
+        if (edges[0] == undefined) {
+            alert("No edges selected");
+        } else if (edges.length > 1) {
+            alert("Please Select 1 edge only");
+        } else {
+            console.log("Got something, checking it out");
+            console.log(edges[0].from, edges[0].to);
+            var newEdges = this.state.edges;
+            var index = 0;
+            for (var i = 0; i < newEdges.length; i++){
+                if (this.state.edges[i].id == edges[0]){
+                    newEdges.splice(i, 1);
+                }
+            }
+            this.setState({
+                edges: newEdges
+            });
+            this.resetNetwork();
+        }
+        return null;
+    }
+
     setEndNode() {
         var network = this.state.network;
         var nodes = network.getSelectedNodes();
@@ -328,6 +362,7 @@ class Main extends React.Component {
         this.setEndNode = this.setEndNode.bind(this);
         this.dumbstra = this.dumbstra.bind(this);
         this.editEdgeWeight = this.editEdgeWeight.bind(this);
+        this.removeEdge = this.removeEdge.bind(this);
         this.state = {
             network: null,
             startNode: null,
@@ -366,10 +401,15 @@ class Main extends React.Component {
             return (
                 <div className="wrapper">
                     <Graph />
-                    <SetStartButton onClickFunction={this.setStartNode} />
-                    <SetEndButton onClickFunction={this.setEndNode} />
-                    <CalculateButton onClickFunction={this.dumbstra} />
-                    <EditEdgeWeight onClickFunction={this.editEdgeWeight} />
+                    <div>
+                        <SetStartButton onClickFunction={this.setStartNode} />
+                        <SetEndButton onClickFunction={this.setEndNode} />
+                        <CalculateButton onClickFunction={this.dumbstra} />
+                    </div>
+                    <div>
+                        <EditEdgeWeight onClickFunction={this.editEdgeWeight} />
+                    </div>
+                    <DeleteEdgeButton onClickFunction={this.removeEdge} />
                     <div id="StartEndingNode">
                         <div id="StartNode">
                             <h4>Starting Node: </h4>
