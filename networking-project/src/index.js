@@ -17,38 +17,41 @@ class Graph extends React.Component {
     }
 }
 
+class RouteTable extends React.Component {
+    render() {
+        return (
+            <tr>
+                <td>{this.props.index}</td>
+                <td>{this.props.edge}</td>
+            </tr>
+        );
+    }
+}
+
 class DeleteEdgeButton extends React.Component {
     render() {
         return (
-            <Button onClick={this.props.onClickFunction}>
-                Delete Selected Edge
-            </Button>
+            <Button onClick={this.props.onClickFunction}>Delete Edge</Button>
         );
     }
 }
 
 class SetStartButton extends React.Component {
     render() {
-        return (
-            <Button onClick={this.props.onClickFunction}>Set Start Node</Button>
-        );
+        return <Button onClick={this.props.onClickFunction}>Start Node</Button>;
     }
 }
 class SetEndButton extends React.Component {
     render() {
-        return (
-            <Button onClick={this.props.onClickFunction}>Set End Node</Button>
-        );
+        return <Button onClick={this.props.onClickFunction}>End Node</Button>;
     }
 }
 class EditEdgeWeight extends React.Component {
     render() {
         return (
             <div id="EditEdgeWeightInputWrapper">
-                <Button onClick={this.props.onClickFunction}>
-                    Edit Edge Weight
-                </Button>
-                <label htmlFor="editEdgeWeightInput">New Edge Weight</label>
+                <Button onClick={this.props.onClickFunction}>Edit Edge</Button>
+                <label htmlFor="editEdgeWeightInput">Weight: </label>
                 <input id="editEdgeWeightInput" />
             </div>
         );
@@ -57,9 +60,7 @@ class EditEdgeWeight extends React.Component {
 
 class CalculateButton extends React.Component {
     render() {
-        return (
-            <Button onClick={this.props.onClickFunction}>Calculate Path</Button>
-        );
+        return <Button onClick={this.props.onClickFunction}>Run</Button>;
     }
 }
 
@@ -362,7 +363,7 @@ class Main extends React.Component {
                 }
             }
         }
-
+        list = list.reverse();
         this.setState({
             edges: copyEdges
         });
@@ -370,10 +371,10 @@ class Main extends React.Component {
         console.log(this.state.edges);
 
         var self = this;
-        const frameLength = 1000;
+        const frameLength = 333;
 
         console.log(list);
-        list = list.reverse();
+
         if (list.length !== 0) {
             for (let i = 0; i < list.length; i++) {
                 setTimeout(() => {
@@ -399,15 +400,69 @@ class Main extends React.Component {
             startNode: null,
             endNode: null,
             nodes: [
-                { id: 0, label: "A" },
-                { id: 1, label: "B" },
-                { id: 2, label: "C" },
-                { id: 3, label: "D" },
-                { id: 4, label: "E" },
-                { id: 5, label: "F" },
-                { id: 6, label: "G" },
-                { id: 7, label: "H" },
-                { id: 8, label: "I" }
+                {
+                    id: 0,
+                    label: "A",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 1,
+                    label: "B",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 2,
+                    label: "C",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 3,
+                    label: "D",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 4,
+                    label: "E",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 5,
+                    label: "F",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 6,
+                    label: "G",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 7,
+                    label: "H",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                },
+                {
+                    id: 8,
+                    label: "I",
+                    color: {
+                        highlight: "#00b4ff"
+                    }
+                }
             ],
             edges: [
                 { from: 0, to: 2, label: "5", width: 3 },
@@ -643,7 +698,7 @@ vis.Network.prototype.animateTraffic = function(
                 this.trafficCanvasCtx.lineWidth = 1;
                 this.trafficCanvasCtx.strokeWidth = 4;
                 this.trafficCanvasCtx.strokeStyle = "rgba(57,138,255,0.1)";
-                this.trafficCanvasCtx.fillStyle = "#1262e3";
+                this.trafficCanvasCtx.fillStyle = "#ff0010";
                 this.trafficCanvasCtx.fill();
                 this.trafficCanvasCtx.stroke();
                 this.trafficCanvasCtx.closePath();
@@ -661,13 +716,11 @@ vis.Network.prototype.animateTraffic = function(
             setTimeout(
                 this.animateFrame.bind(this),
                 10,
-                offset + 0.01,
+                offset + 0.03333,
                 frameCounter++
             );
         },
 
-        //////////////////////////////////////////////////////////////
-        //
         initalizeCanvasForEdgeAnimation: function() {
             this.reportedErrors = {};
 
@@ -692,50 +745,6 @@ vis.Network.prototype.animateTraffic = function(
             this.trafficCanvasCtx.setTransform(1, 0, 0, 1, 0, 0);
             this.trafficCanvasCtx.translate(t.x, t.y);
             this.trafficCanvasCtx.scale(s, s);
-            /*
-			if (!this.onPreAnimation)
-            this.onPreAnimation = function(edgesTrafficList) {
-                // remove the value from the source traffic
-                for (var i in edgesTrafficList) {
-                    edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
-                    if (!edgeTraffic.edge) {
-                        continue;
-                    }
-                    var fromValue = edgeTraffic.edge.from.getValue()
-                    if (parseFloat(fromValue)) {
-                    
-                        var newValue = fromValue +
-                            (edgeTraffic.isBackward ? -1 : 1) * -edgeTraffic.trafficSize;
-                    
-                        this.thisNetwork.body.data.nodes
-                            .update({id:edgeTraffic.edge.fromId, value:Math.max(0, newValue)});
-                    }
-                }
-            };
-
-            //////////////////////////////////////////////////////////////
-            // 
-			if (!this.onPostAnimation)
-            this.onPostAnimation = function(edgesTrafficList) {
-                // add the value from the source traffic to target
-                for (var i in edgesTrafficList) {
-                    edgeTraffic = this.parseEdgeTraffic(edgesTrafficList[i]);
-                    if (!edgeTraffic.edge) {
-                        continue;
-                    }
-                    var toValue = edgeTraffic.edge.to.getValue()
-                    if (parseFloat(toValue)) {
-
-                    var newValue = (toValue || 0) 
-                        + (edgeTraffic.isBackward ? -1 : 1) * edgeTraffic.trafficSize;
-                        
-                    
-                        this.thisNetwork.body.data.nodes
-                            .update({id:edgeTraffic.edge.toId, value: newValue});
-                    }
-                }
-            };
-            */
         }
     };
 
@@ -748,7 +757,7 @@ vis.Network.prototype.animateTraffic = function(
     )
         return;
 
-    trafficAnimator.animateFrame(0.1 /*animationStartOffset*/, 0 /*frame*/);
+    trafficAnimator.animateFrame(0.15 /*animationStartOffset*/, 0 /*frame*/);
 };
 
 vis.Network.prototype.animateTrafficOnPostAnimation = function(
