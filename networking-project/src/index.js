@@ -289,6 +289,9 @@ class Main extends React.Component {
         /** NOTE: THIS SECTION DOESN'T REALLY WORK YET. STILL DEBUGGING */
 
         var copyEdges = this.state.edges;
+        for(var k = 0; k < copyEdges.length; k++){
+            copyEdges[k].color = { color: "blue" };
+        }
         // For each of our calculated routes,
         for (var i = 0; i < route.length; i++) {
             var routeEdge = route[i];
