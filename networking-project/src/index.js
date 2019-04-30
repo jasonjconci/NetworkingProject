@@ -11,33 +11,6 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import Router from "./Router.js";
 
-class RouterGroup extends Model {
-    static defaultState() {
-        return {
-            routers: {}
-        };
-    }
-
-    setup() {
-        var routerList = [];
-        for (var i = 0; i < 10; i++) {
-            var r = new RouterObject({
-                id: i
-            });
-            routerList.push(r);
-        }
-        this.setRouters(routerList);
-    }
-}
-
-class RouterObject extends Model {
-    static defaultState() {
-        return {
-            id: 0
-        };
-    }
-}
-
 class Graph extends React.Component {
     render() {
         return <div className="graph" id="mynetwork" />;
@@ -55,6 +28,19 @@ class SetEndButton extends React.Component {
     render() {
         return (
             <Button onClick={this.props.onClickFunction}>Set End Node</Button>
+        );
+    }
+}
+class EditEdgeWeight extends React.Component {
+    render() {
+        return (
+            <div id="EditEdgeWeightInputWrapper">
+                <Button onClick={this.props.onClickFunction}>
+                    Edit Edge Weight
+                </Button>
+                <label htmlFor="editEdgeWeightInput">New Edge Weight</label>
+                <input id="editEdgeWeightInput" />
+            </div>
         );
     }
 }
@@ -127,10 +113,34 @@ class Main extends React.Component {
         if (nodes[0] == undefined) {
             alert("No nodes selected");
         } else if (nodes.length > 1) {
-            alert("Please Selected 1 node only");
+            alert("Please Select 1 node only");
         } else {
             this.state.startNode = nodes[0];
             $("#StartingNodeSpan").prop("innerHTML", this.state.startNode);
+        }
+        return null;
+    }
+    editEdgeWeight() {
+        var network = this.state.network;
+        var edges = network.getSelectedEdges();
+        var value = $("#editEdgeWeightInput").val();
+        if (edges[0] == undefined) {
+            alert("No edges selected");
+        } else if (isNaN(value)) {
+            alert("Please enter valid weight");
+        } else if (edges.length > 1) {
+            alert("Please Select 1 edge only");
+        } else {
+            var newEdges = this.state.edges;
+            for (var i = 0; i < this.state.edges.length; i++) {
+                if (this.state.edges[i].id == edges[0]) {
+                    newEdges[i].label = value;
+                }
+            }
+            this.setState({
+                edges: newEdges
+            });
+            this.resetNetwork();
         }
         return null;
     }
@@ -140,7 +150,7 @@ class Main extends React.Component {
         if (nodes[0] == undefined) {
             alert("No nodes selected");
         } else if (nodes.length > 1) {
-            alert("Please Selected 1 node only");
+            alert("Please Select 1 node only");
         } else {
             this.state.endNode = nodes[0];
             $("#EndingNodeSpan").prop("innerHTML", this.state.endNode);
@@ -279,7 +289,6 @@ class Main extends React.Component {
         /** NOTE: THIS SECTION DOESN'T REALLY WORK YET. STILL DEBUGGING */
 
         var copyEdges = this.state.edges;
-        var newEdges = [];
         // For each of our calculated routes,
         for (var i = 0; i < route.length; i++) {
             var routeEdge = route[i];
@@ -315,6 +324,7 @@ class Main extends React.Component {
         this.setStartNode = this.setStartNode.bind(this);
         this.setEndNode = this.setEndNode.bind(this);
         this.dumbstra = this.dumbstra.bind(this);
+        this.editEdgeWeight = this.editEdgeWeight.bind(this);
         this.state = {
             network: null,
             startNode: null,
@@ -349,8 +359,6 @@ class Main extends React.Component {
     render() {
         console.log(this.state.network);
         var network = this.state.network;
-        const routerGroup = new RouterGroup();
-        routerGroup.setup();
         if (network) {
             return (
                 <div className="wrapper">
@@ -358,6 +366,7 @@ class Main extends React.Component {
                     <SetStartButton onClickFunction={this.setStartNode} />
                     <SetEndButton onClickFunction={this.setEndNode} />
                     <CalculateButton onClickFunction={this.dumbstra} />
+                    <EditEdgeWeight onClickFunction={this.editEdgeWeight} />
                     <div id="StartEndingNode">
                         <div id="StartNode">
                             <h4>Starting Node: </h4>
@@ -367,7 +376,6 @@ class Main extends React.Component {
                             <h4>Ending Node: </h4>
                             <span id="EndingNodeSpan">None</span>
                         </div>
-                        <span>{routerGroup.getRouters()[3].getId()}</span>
                     </div>
                 </div>
             );
